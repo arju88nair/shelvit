@@ -48,8 +48,9 @@ app.config['MONGODB_SETTINGS'] = app.config.get("MONGODB_SETTINGS")
 app.config['JWT_BLACKLIST_ENABLED'] = True
 app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
 app.config['MONGODB_SETTINGS'] = {
-    'host': 'mongodb://localhost/til'
+    'host': 'mongodb://localhost/shelvit'
 }
+app.config['JWT_SECRET_KEY'] = "Shelvit"
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 initialize_db(app)
