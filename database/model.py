@@ -26,22 +26,15 @@ class Board(db.Document):
 
 
 class Item(db.Document):
-    title = db.StringField()
     source = db.StringField(required=True)
-    # source_url = db.URLField(required=True)
-    source_url = db.URLField()
-    summary = db.StringField()
-    item_type = db.StringField(required=True)
-    content = db.StringField()
+    source_url = db.URLField(required=True)
+    tags = db.StringField()
     slug = db.StringField()
+    bookmark_created = db.StringField()
     board = db.ReferenceField('Board', required=True)
-    keywords = db.ListField()
-    tags = db.ListField()
     added_by = db.ReferenceField('User')
     created_at = db.DateTimeField()
     modified_at = db.DateTimeField(default=datetime.datetime.now)
-    liked_by = db.ListField()
-    like_count = db.IntField()
 
     def save(self, *args, **kwargs):
         if not self.created_at:

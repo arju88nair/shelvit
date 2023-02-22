@@ -1,5 +1,9 @@
 import json
 
+import datetime
+import timeago
+from bson.json_util import dumps
+from bson.objectid import ObjectId
 from flask import Response, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restful import Resource
@@ -8,9 +12,6 @@ from mongoengine.errors import FieldDoesNotExist, NotUniqueError, DoesNotExist, 
 from database.model import Board, User
 from util.errors import SchemaValidationError, UpdatingItemError, ItemAlreadyExistsError, InternalServerError, \
     DeletingItemError, ItemNotExistsError
-import timeago, datetime
-from bson.objectid import ObjectId
-from bson.json_util import dumps
 
 
 class BoardsApi(Resource):
@@ -40,9 +41,8 @@ class BoardsApi(Resource):
                 board_dict['username'] = user[0].username
                 boards_list.append(board_dict)
             res = {'data': boards_list, 'message': "Successfully retrieved", "count": len(boards_list)}
-            boards_josn = dumps(res)
-            return Response(boards_josn, mimetype="application/json", status=200)
-
+            boards_json = dumps(res)
+            return Response(boards_json, mimetype="application/json", status=200)
 
         except Exception as e:
             print(e)
