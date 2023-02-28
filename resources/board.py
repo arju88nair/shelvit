@@ -231,6 +231,7 @@ class UploadURLs(Resource):
         Returns:
             [json] -- [Json object with message and status code]
         """
+        from bs4 import BeautifulSoup, NavigableString, Tag
         if request.method == 'POST':
             upload = request.files['file']
             # print(upload)
@@ -240,8 +241,19 @@ class UploadURLs(Resource):
             # f.save(secure_filename(f.filename))
             fic = open(f.filename, "r")
             # initialize the class passing in the path to the bookmarks file to convert
-            # bookmarks = BookmarksConverter(fic.name)
-            # print(bookmarks)
+            bookmarks = BookmarksConverter(fic.name)
+            # for body_child in bookmarks.body.children:
+            #     if isinstance(body_child, NavigableString):
+            #         continue
+            #     if isinstance(body_child, Tag):
+            #         print(body_child.name)
+            bookmarks.parse("html")
+            print(bookmarks)
+
+            bookmarks.convert("json")
+            bookmarks.save()
+
+
             import sys
             sys.setrecursionlimit(10000)
 
@@ -251,17 +263,17 @@ class UploadURLs(Resource):
 
             dt = soup.find_all('dt')
             folder_name = ''
-            for i in dt:
-                n = i.find_next()
-                if n.name == 'h3':
-                    folder_name = n.text
-                    continue
-                else:
-                    print(f'url = {n.get("href")}')
-                    print(f'website name = {n.text}')
-                    print(f'add date = {n.get("add_date")}')
-                    print(f'folder name = {folder_name}')
-                print()
+            # for i in dt:
+            #     n = i.find_next()
+            #     if n.name == 'h3':
+            #         folder_name = n.text
+            #         continue
+            #     else:
+            #         print(f'url = {n.get("href")}')
+            #         print(f'website name = {n.text}')
+            #         print(f'add date = {n.get("add_date")}')
+            #         print(f'folder name = {folder_name}')
+            #     print()
             # for tag in item.select('a[href][add_date]'):
             #     print(tag['href'])
 
@@ -304,6 +316,6 @@ class UploadURLs(Resource):
         except InvalidQueryError:
             raise SchemaValidationError
         except DoesNotExist:
-            raise UpdatingItemError
+            raise UpdatingItemEorror
         except Exception:
             raise InternalServerError
