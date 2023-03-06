@@ -27,7 +27,7 @@ class Board(db.Document):
 
 class Item(db.Document):
     source = db.StringField(required=True)
-    source_url = db.URLField(required=True)
+    source_url = db.StringField(required=True)
     tags = db.StringField()
     slug = db.StringField()
     bookmark_created = db.StringField()
@@ -39,6 +39,8 @@ class Item(db.Document):
     def save(self, *args, **kwargs):
         if not self.created_at:
             self.created_at = datetime.datetime.now()
+        if not self.tags or self.tags is None:
+            self.tags = "Ba"
         self.modified_at = datetime.datetime.now()
         return super(Item, self).save(*args, **kwargs)
 

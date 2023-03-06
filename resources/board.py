@@ -232,90 +232,69 @@ class UploadURLs(Resource):
             [json] -- [Json object with message and status code]
         """
         from bs4 import BeautifulSoup, NavigableString, Tag
-        if request.method == 'POST':
-            upload = request.files['file']
-            # print(upload)
-            # path = upload.temporary_file_path
-            f = request.files['file']
-            # print(path)
-            # f.save(secure_filename(f.filename))
-            fic = open(f.filename, "r")
-            # initialize the class passing in the path to the bookmarks file to convert
-            bookmarks = BookmarksConverter(fic.name)
-            # for body_child in bookmarks.body.children:
-            #     if isinstance(body_child, NavigableString):
-            #         continue
-            #     if isinstance(body_child, Tag):
-            #         print(body_child.name)
-            bookmarks.parse("html")
-            print(bookmarks)
-
-            bookmarks.convert("json")
-            bookmarks.save()
-
-
-            import sys
-            sys.setrecursionlimit(10000)
-
-            from bs4 import BeautifulSoup
-            soup = BeautifulSoup(fic, 'lxml')
-            # item = soup.find_all('dl')[3]
-
-            dt = soup.find_all('dt')
-            folder_name = ''
-            # for i in dt:
-            #     n = i.find_next()
-            #     if n.name == 'h3':
-            #         folder_name = n.text
-            #         continue
-            #     else:
-            #         print(f'url = {n.get("href")}')
-            #         print(f'website name = {n.text}')
-            #         print(f'add date = {n.get("add_date")}')
-            #         print(f'folder name = {folder_name}')
-            #     print()
-            # for tag in item.select('a[href][add_date]'):
-            #     print(tag['href'])
-
-            # parse the file passing the format of the source file; "db", "html" or "json"
-            # bookmarks.parse("html")
-            # print(bookmarks)
-            #
-            # # convert the bookmarks to the desired format by passing the format as a string; "db", "html", or "json"
-            # bookmarks.convert("json")
-            #
-            # # at this point the converted bookmarks are stored in the 'bookmarks' attribute.
-            # # which can be used directly or exported to a file.
-            # bookmarks.save()
-            return 'file uploaded successfully'
-
-
-        # # source validations
-        # if 'source' not in body or 'source_url' not in body or 'board' not in body:
-        #     raise SchemaValidationError
-        #
-        # source = body['source']
-        # source_url = body['source_url']
-        # board = body['board']
-        #
-        # if source is None or source == '':
-        #     raise SchemaValidationError
-        #
-        # if source_url is None or source_url == '':
-        #     raise SchemaValidationError
-        #
-        # if board is None or board == '':
-        #     raise SchemaValidationError
-
         try:
-            user_id = get_jwt_identity()
-            body = request.get_json()
-            Item.objects.get(id=id, added_by=user_id).update(**body)
-            data = json.dumps({'message': "Successfully updated"})
-            return Response(data, mimetype="application/json", status=200)
+
+            if request.method == 'POST':
+                # upload = request.files['file']
+                # # print(upload)
+                # # path = upload.temporary_file_path
+                f = request.files['file']
+
+                fic = open(f.filename, "r")
+
+                from time import strftime, localtime
+                import sys
+                sys.setrecursionlimit(10000)
+
+                from bs4 import BeautifulSoup
+                soup = BeautifulSoup(fic, 'lxml')
+                item = soup.find_all('dl')[3]
+
+                dt = soup.find_all('dt')
+                boards = []
+                body = {}
+                folder_name = ''
+                for i in dt:
+                    n = i.find_next()
+                    if n.name == 'h3':
+                        folder_name = n.text
+                        boards.append(folder_name)
+                        continue
+                    else:
+                        user_id = get_jwt_identity()
+                        user = User.objects.get(id=user_id)
+                        # new_time = strftime('%Y-%m-%d %H:%M:%S', localtime(n.get("add_date")))
+                        # print(new_time)
+                        body['source'] = n.text
+                        if n.get("tags") or n.get("href") is not None:
+                            body['tags'] = n.get("tags")
+                        if n.get("href") or n.get("href") is not None:
+                            body['source_url'] = n.get("href")
+                        # if n.get("add_date"):
+                        #     body['bookmark_created'] = int({n.get("add_date")})
+                        body['board'] = folder_name
+                        item = Item(**body, added_by=user, )
+                        item.save()
+                        item_id = item.id
+
+                        # if folder_name == "Other Bookmarks":
+                        #     print(f'url = {n.get("href")}')
+                        #     print(f'website name = {n.text}')
+                        #     print(f'add date = {n.get("add_date")}')
+                        #     print(f'folder name = {folder_name}')
+
+                items = Item.objects().to_json()
+                data = json.dumps(
+                    {'id': str(item_id), 'count': len(json.loads(items)), 'message': "Successfully inserted"})
+                return Response(data, mimetype="application/json", status=200)
+
+
         except InvalidQueryError:
             raise SchemaValidationError
         except DoesNotExist:
-            raise UpdatingItemEorror
-        except Exception:
+            raise ItemAlreadyExistsError
+        except Exception as e:
+            print(n.get("tags"))
+            print({n.get("text")})
+            print(e)
             raise InternalServerError
